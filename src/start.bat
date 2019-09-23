@@ -1,0 +1,2 @@
+python presence.py
+pause
