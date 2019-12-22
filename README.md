@@ -1,20 +1,15 @@
 # ableton-presence
-Discord Rich Presence with Ableton
+Uses pypresence to display what you're working on in Ableton to everyone on Discord.
 
-Go to https://discordapp.com/developers/applications/ and create a new application.
+### Adding to Startup
 
-Name it Ableton
+To add to startup, hit the Windows Key + R at the same time
 
-Click on the icon, and change it to the file named "main.png"
+Enter 
 
-Click on Rich Presence, and then Art Assets.
+```
+shell:startup
+```
 
-Add the image "main.png" and make sure the name is "main".
+and put AbletonPresence.exe in there.
 
-Save the changes, and then click on General Information.
-
-Under the client ID, hit the copy button.
-
-Once all that is done, you should open the file named "config.json" in the main directory.
-
-Replace the 00000000 next to client ID with the ID you copied. 
