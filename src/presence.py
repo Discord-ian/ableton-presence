@@ -1,8 +1,10 @@
 from pypresence import Presence, Activity 
 import time
 import win32gui
+import requests
 import ctypes
-#import json
+import os
+import webbrowser
 onLaunch = True
 EnumWindows = ctypes.windll.user32.EnumWindows
 EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
@@ -12,7 +14,7 @@ IsWindowVisible = ctypes.windll.user32.IsWindowVisible
 titles = []
 storedTitle = ""
 
-
+# from 
 def foreach_window(hwnd, lParam):
 	if IsWindowVisible(hwnd):
 		length = GetWindowTextLength(hwnd)
@@ -22,7 +24,7 @@ def foreach_window(hwnd, lParam):
 	return True
 
 
-def checkforupdate():
+def checkForUpdate():
 	global rpcActive
 	global storedTitle
 	global titles
@@ -54,15 +56,34 @@ def checkforupdate():
 		rpcActive = True
 	print("StoredTitle = {} // rpcActive = {}".format(storedTitle, rpcActive))
 
+
+def checkIfLatest():
+	currentVersion = "1.1v.3"
+	check = requests.get(url="https://im-stuck-in.space/dev/latestversion")
+	if check.json()[0] != currentVersion:
+		print("wrong version!")
+		box = ctypes.windll.user32.MessageBoxW(0, "There is an update available", "Version Checker", 1)
+		if box == 1:
+			webbrowser.open('https://github.com/Discord-ian/ableton-presence/releases')
+			os._exit(0)
+		print(box)
+
+
 while True:
 	if onLaunch:
-		#with open('config.json') as userCfg:
-		#	data = json.load(userCfg)
-		onLaunch = False
-		#print(data)
-		RPC = Presence("609115046051840050")
-		RPC.connect()
-		phrase = "Making Music"
+		# with open('config.json') as userCfg:
+		#	data = json.load(userCfg) might add back at a later date
+		RPC = Presence("609115046051840050") # discord application ID
+		try:
+			RPC.connect()
+		except Exception as e:
+			onLaunch = True
+			print("trying again.")
+		else:
+			onLaunch = False
+			checkIfLatest()
+			phrase = "Making Music"
+			print("check")
 		rpcActive = False
-	checkforupdate()
+	checkForUpdate()
 	time.sleep(15)
