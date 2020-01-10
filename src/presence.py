@@ -58,15 +58,19 @@ def checkForUpdate():
 
 
 def checkIfLatest():
-	currentVersion = "1.1v.3"
-	check = requests.get(url="https://im-stuck-in.space/dev/latestversion")
-	if check.json()[0] != currentVersion:
-		print("wrong version!")
-		box = ctypes.windll.user32.MessageBoxW(0, "There is an update available", "Version Checker", 1)
-		if box == 1:
-			webbrowser.open('https://github.com/Discord-ian/ableton-presence/releases')
-			os._exit(0)
-		print(box)
+	currentVersion = "1.2.0"
+	try:
+		check = requests.get(url="https://im-stuck-in.space/dev/latestversion")
+		if check.json()[0] != currentVersion:
+			print("wrong version!")
+			box = ctypes.windll.user32.MessageBoxW(0, "There is an update available", "Version Checker", 1)
+			if box == 1:
+				webbrowser.open('https://github.com/Discord-ian/ableton-presence/releases')
+				os._exit(0)
+			print(box)
+	except Exception as e:
+		print("Ran into exception: {}\nIgnoring...".format(e))
+
 
 
 while True:
