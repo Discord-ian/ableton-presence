@@ -1,9 +1,7 @@
 from pypresence import Presence
 import time
-#import win32gui
 import json
 import requests
-#from infi.systray import SysTrayIcon py2exe fails to run
 import ctypes
 import os
 import webbrowser
@@ -11,7 +9,7 @@ import logging
 import platform
 import random
 import string
-
+#  TODO: port entire project over to C# and figure out a solution for Linux/OSX
 dev_level = logging.INFO
 onLaunch = True
 EnumWindows = ctypes.windll.user32.EnumWindows
@@ -25,36 +23,7 @@ storedTitle = ""
 logging.basicConfig(level=dev_level)
 
 
-def blacklist(systray):
-    addtoblacklist(storedTitle)
-
-
-def call_quit(systray):
-    os._exit(0)
-
-
-def checkupdate(systray):
-    checkIfLatest()
-
-
-def disable_blacklist(systray):
-    print("the blacklist has been disabled")
-
-
-#menu_options = (("Check for Updates", None, checkupdate),)
-#systray = SysTrayIcon("icon.ico", "Ableton Presence", menu_options, on_quit=call_quit)
-#systray.start()
-
-
-def addtoblacklist(title):
-    checkifblacklisted(title)
-
-
-def checkifblacklisted(title):
-    print("OK")
-
-
-def foreach_window(hwnd, lParam): # https://sjohannes.wordpress.com/2012/03/23/win32-python-getting-all-window-titles/
+def foreach_window(hwnd, lParam):  # https://sjohannes.wordpress.com/2012/03/23/win32-python-getting-all-window-titles/
     if IsWindowVisible(hwnd):
         length = GetWindowTextLength(hwnd)
         buff = ctypes.create_unicode_buffer(length + 1)
@@ -72,11 +41,12 @@ def checkForUpdate():
     global storedTitle
     global titles
     EnumWindows(EnumWindowsProc(foreach_window), 0)
-    aa = [string for string in titles if "Ableton Live" in string]
+    aa = [string for string in titles if "Ableton Live" in string]  # checks to see if any process with the window name
+    # ableton live exists
     searchstring = ''.join(aa)
     titles = []
-    checkForUntitled = [string for string in aa if "Untitled" in string]
-    if checkForUntitled != []:
+    checkForUntitled = [string for string in aa if "Untitled" in string]  # special case for untitled project
+    if checkForUntitled:
         forCheck = searchstring.split("-")[0]
         forCheck = forCheck.strip()
     else:
@@ -87,17 +57,15 @@ def checkForUpdate():
         RPC.clear()  # kills the RPC when there is no Ableton found to be running and it is stated as currently active
         rpcActive = False  # inform everything else that the RPC is closed
         storedTitle = ""
-        outputDebug()
     details = "Project: {}".format(forCheck)
     if rpcActive and forCheck != storedTitle:
         storedTitle = forCheck
         RPC.update(large_image="main", state=phrase, details=details, start=time.time())
-        outputDebug()
     elif forCheck != "" and not rpcActive:
         RPC.update(large_image="main", state=phrase, details=details, start=time.time())
         storedTitle = forCheck
         rpcActive = True
-        outputDebug()
+    outputDebug()
 
 
 def checkIfLatest():
@@ -108,7 +76,8 @@ def checkIfLatest():
         print(check.json())
         if check.json()["version"] != currentVersion:
             box = ctypes.windll.user32.MessageBoxW(0,
-                                                   "There is an update available. You are on version {}, and the latest release version is {}.".format(
+                                                   "There is an update available. You are on version {}, and the "
+                                                   "latest release version is {}.".format(
                                                        currentVersion, check.json()["version"]), "Version Checker", 1)
             if box == 1:
                 logging.debug("Opening webbrowser to https://github.com/Discord-ian/ableton-presence/releases")
@@ -148,7 +117,9 @@ def data_collect():
         except Exception as e:
             logging.error("Warning: {}".format(e))
         box = ctypes.windll.user32.MessageBoxW(0,
-                                               "Would you like to send data (OS version, Ableton Presence version) to improve the program? This is the only time you will be asked", "Analytics Collection", 1)
+                                               "Would you like to send data (OS version, Ableton Presence version) to "
+                                               "improve the program? This is the only time you will be asked",
+                                               "Analytics Collection", 1)
         if box == 1:
             with open("main_config.json", "r") as tosave:
                 user_prefs = json.load(tosave)
@@ -172,19 +143,16 @@ def data_collect():
                 json.dump(user_prefs, out)
         os_v = "{} {} {}".format(platform.system(), platform.release(), platform.version())
         version = "1.9.0" # TODO: make this a real version number please
-        print({'os': os_v, 'v': version, "id": user_prefs["id"]})
         requests.post(url="https://api.discordian.dev/analytics", data={'os': os_v, 'v': version, "id": user_prefs["id"]})
 
 
 logging.info("If you get an error stating that the RPC handshake failed, Discord is probably not open")
 while True:
     if onLaunch:
-        # with open('config.json') as userCfg:
-        # data = json.load(userCfg) might add back at a later date
         RPC = Presence("609115046051840050")  # discord application ID
         try:
             RPC.connect()
-        except Exception as e:
+        except Exception as e:  # TODO: fix generic exception
             onLaunch = True
             logging.warning("RPC handshake failed... trying again in 15 seconds")
         else:
@@ -192,9 +160,9 @@ while True:
             checkIfLatest()
             try:
                 data_collect()  # not mission critical, can fail and still have app work
-            except Exception as e:
-                print("failed on data_collect() @ "+e)
+            except Exception as e:  # TODO: fix generic exception
+                logging.error("failed on data_collect() @ " + e)
             phrase = "Making Music"
         rpcActive = False
     checkForUpdate()
-    time.sleep(15)
+    time.sleep(15)  # blocking statement is ok in this case
