@@ -1,12 +1,16 @@
-from pypresence import Presence, Activity
+from pypresence import Presence
 import time
-import win32gui
+#import win32gui
+import json
 import requests
 #from infi.systray import SysTrayIcon py2exe fails to run
 import ctypes
 import os
 import webbrowser
 import logging
+import platform
+import random
+import string
 
 dev_level = logging.INFO
 onLaunch = True
@@ -79,7 +83,7 @@ def checkForUpdate():
         forCheck = searchstring.split("[")[0]
         forCheck = forCheck.split("*")[0]
         forCheck = forCheck.strip()
-    if forCheck is "" and rpcActive:
+    if forCheck == "" and rpcActive:
         RPC.clear()  # kills the RPC when there is no Ableton found to be running and it is stated as currently active
         rpcActive = False  # inform everything else that the RPC is closed
         storedTitle = ""
@@ -89,7 +93,7 @@ def checkForUpdate():
         storedTitle = forCheck
         RPC.update(large_image="main", state=phrase, details=details, start=time.time())
         outputDebug()
-    elif forCheck is not "" and not rpcActive:
+    elif forCheck != "" and not rpcActive:
         RPC.update(large_image="main", state=phrase, details=details, start=time.time())
         storedTitle = forCheck
         rpcActive = True
@@ -97,14 +101,15 @@ def checkForUpdate():
 
 
 def checkIfLatest():
-    currentVersion = "1.2.1"
-    logging.info("Checking for update @ https://im-stuck-in.space/dev/latestversion")
+    currentVersion = "1.9.0"
+    logging.info("Checking for update @ https://discordian.dev/dev/latestversion")
     try:
-        check = requests.get(url="https://im-stuck-in.space/dev/latestversion")
-        if check.json()[0] != currentVersion:
+        check = requests.get(url="https://discordian.dev/dev/latestversion")
+        print(check.json())
+        if check.json()["version"] != currentVersion:
             box = ctypes.windll.user32.MessageBoxW(0,
                                                    "There is an update available. You are on version {}, and the latest release version is {}.".format(
-                                                       currentVersion, check.json()[0]), "Version Checker", 1)
+                                                       currentVersion, check.json()["version"]), "Version Checker", 1)
             if box == 1:
                 logging.debug("Opening webbrowser to https://github.com/Discord-ian/ableton-presence/releases")
                 webbrowser.open('https://github.com/Discord-ian/ableton-presence/releases')
@@ -117,12 +122,66 @@ def checkIfLatest():
         logging.error("Ran into " + e)
 
 
+def data_collect():
+    appdata_path = os.getenv("appdata")
+    path = os.getenv("APPDATA") + "/AbletonPresence"
+    os.chdir(os.getenv("APPDATA"))
+    if os.path.isdir("AbletonPresence"):
+        try:
+            with open("AbletonPresence/main_config.json", "r") as tosave:
+                user_prefs = json.load(tosave)
+        except Exception as e:
+            logging.error("Warning: {}".format(e))
+    else:
+        os.mkdir(appdata_path+"/AbletonPresence")
+        os.chdir(path)
+        try:
+            about = requests.get("https://discordian.dev/ableton/about.txt")
+            version = requests.get("https://discordian.dev/ableton/version.json")
+            main_config = requests.get("https://discordian.dev/ableton/main_config.json")
+            with open("about.txt", "w+") as out:
+                out.write(about.text)
+            with open("version.json", "w+") as out:
+                json.dump(version.json(), out)
+            with open("main_config.json", "w+") as out:
+                json.dump(main_config.json(), out)
+        except Exception as e:
+            logging.error("Warning: {}".format(e))
+        box = ctypes.windll.user32.MessageBoxW(0,
+                                               "Would you like to send data (OS version, Ableton Presence version) to improve the program? This is the only time you will be asked", "Analytics Collection", 1)
+        if box == 1:
+            with open("main_config.json", "r") as tosave:
+                user_prefs = json.load(tosave)
+            user_prefs["collect_data"] = True
+            user_prefs["has_asked"] = True
+        else:
+            with open("main_config.json", "r") as tosave:
+                user_prefs = json.load(tosave)
+            user_prefs["collect_data"] = False
+            user_prefs["has_asked"] = True
+        with open("main_config.json", "w") as out:
+            json.dump(user_prefs, out)
+    if user_prefs["collect_data"]:
+        if user_prefs.get("id") is None:
+            os.chdir(path)
+            user_prefs["id"] = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
+            # thank you stack overflow
+            # note: this isnt meant to be crpytographically secure or what not.
+            # just a way to hopefully avoid me counting 1 computer as multiple ppl
+            with open("main_config.json", "w") as out:
+                json.dump(user_prefs, out)
+        os_v = "{} {} {}".format(platform.system(), platform.release(), platform.version())
+        version = "1.9.0" # TODO: make this a real version number please
+        print({'os': os_v, 'v': version, "id": user_prefs["id"]})
+        requests.post(url="https://api.discordian.dev/analytics", data={'os': os_v, 'v': version, "id": user_prefs["id"]})
+
+
+logging.info("If you get an error stating that the RPC handshake failed, Discord is probably not open")
 while True:
     if onLaunch:
         # with open('config.json') as userCfg:
-        #	data = json.load(userCfg) might add back at a later date
+        # data = json.load(userCfg) might add back at a later date
         RPC = Presence("609115046051840050")  # discord application ID
-        logging.info("If you get an error stating that the RPC handshake failed, Discord is probably not open")
         try:
             RPC.connect()
         except Exception as e:
@@ -131,6 +190,10 @@ while True:
         else:
             onLaunch = False
             checkIfLatest()
+            try:
+                data_collect()  # not mission critical, can fail and still have app work
+            except Exception as e:
+                print("failed on data_collect() @ "+e)
             phrase = "Making Music"
         rpcActive = False
     checkForUpdate()

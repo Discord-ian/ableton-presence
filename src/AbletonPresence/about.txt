@@ -1,0 +1,24 @@
+This directory was created by https://github.com/Discord-ian/ableton-presence
+
+Data collection is completely opt-in, and you will be asked only once.
+This file serves to inform you more about the inner workings of AbletonPresence and it's data storage,
+if you're into that kind of thing.
+If you want to view the source code, head to the repository and into the src folder.
+
+Some info about the files inside:
+The file "main_config.json" contains info that tells Ableton Presence how to act.
+The value "collect_data" determines whether or not to send data.
+---->If it is set to "true", data will be sent to an external server. This data
+     is only for analytical reasons.
+     The data sent only includes your OS, and what version of Ableton Presence you are using.
+If "collect_data" is set to false, nothing is sent.
+"has_asked" indicates whether or not you have been asked if you would like to participate in analytics collection.
+The "id" string is created only if "collect_data" is set to true.
+It creates a random (although not password-like) code to identify your computer.
+The only purpose this serves is for me to see how many installations of Ableton Presence there are.
+
+The file "version.json" includes the version of this file, "about.txt".
+
+At the time of writing (1.9.0), these are the only values contained within main_config.json.
+
+This file will be automatically updated when new data needs to be added to it.
