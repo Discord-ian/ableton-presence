@@ -73,7 +73,6 @@ def checkIfLatest():
     logging.info("Checking for update @ https://discordian.dev/dev/latestversion")
     try:
         check = requests.get(url="https://discordian.dev/dev/latestversion")
-        print(check.json())
         if check.json()["version"] != currentVersion:
             box = ctypes.windll.user32.MessageBoxW(0,
                                                    "There is an update available. You are on version {}, and the "
@@ -137,12 +136,14 @@ def data_collect():
             os.chdir(path)
             user_prefs["id"] = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(16))
             # thank you stack overflow
-            # note: this isnt meant to be crpytographically secure or what not.
+            # note: this isnt meant to be cryptographically secure or what not.
             # just a way to hopefully avoid me counting 1 computer as multiple ppl
             with open("main_config.json", "w") as out:
                 json.dump(user_prefs, out)
         os_v = "{} {} {}".format(platform.system(), platform.release(), platform.version())
-        version = "1.9.0" # TODO: make this a real version number please
+        version = "1.9.0"  # TODO: make this a real version number please
+        logging.info("Sent analytical data to https://api.discordian.dev/analytics, read more @ "
+                     "https://github.com/Discord-ian/ableton-presence/blob/master/src/AbletonPresence/about.txt")
         requests.post(url="https://api.discordian.dev/analytics", data={'os': os_v, 'v': version, "id": user_prefs["id"]})
 
 
