@@ -1,3 +1,0 @@
-pypresence
-pywin32
-wget
