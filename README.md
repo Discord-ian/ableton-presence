@@ -28,7 +28,7 @@ You'll also need to do this for updates
 Make sure you're using Python 3.5 or greater.
 
 Navigate to the src folder and install all requirements with
-```python
+```
 python -m pip install -U -r requirements.txt
 ```
 
