@@ -69,7 +69,7 @@ def checkForUpdate():
 
 
 def checkIfLatest():
-    currentVersion = "1.9.0"
+    currentVersion = "1.9.1"
     logging.info("Checking for update @ https://discordian.dev/dev/latestversion")
     try:
         check = requests.get(url="https://discordian.dev/dev/latestversion")
@@ -87,7 +87,7 @@ def checkIfLatest():
         else:
             logging.info("No update found.")
     except Exception as e:
-        logging.error("Ran into " + e)
+        logging.error(e)
 
 
 def data_collect():
@@ -99,7 +99,7 @@ def data_collect():
             with open("AbletonPresence/main_config.json", "r") as tosave:
                 user_prefs = json.load(tosave)
         except Exception as e:
-            logging.error("Warning: {}".format(e))
+            logging.error("Warning: {}".format(e)) 
     else:
         os.mkdir(appdata_path+"/AbletonPresence")
         os.chdir(path)
@@ -141,7 +141,7 @@ def data_collect():
             with open("main_config.json", "w") as out:
                 json.dump(user_prefs, out)
         os_v = "{} {} {}".format(platform.system(), platform.release(), platform.version())
-        version = "1.9.0"  # TODO: make this a real version number please
+        version = "1.9.1"  # TODO: make this a real version number please
         logging.info("Sent analytical data to https://api.discordian.dev/analytics, read more @ "
                      "https://github.com/Discord-ian/ableton-presence/blob/master/src/AbletonPresence/about.txt")
         requests.post(url="https://api.discordian.dev/analytics", data={'os': os_v, 'v': version, "id": user_prefs["id"]})
@@ -160,9 +160,10 @@ while True:
             onLaunch = False
             checkIfLatest()
             try:
-                data_collect()  # not mission critical, can fail and still have app work
+                #data_collect()  # not mission critical, can fail and still have app work
+                logging.info("Skipping data collection as it is not important.")
             except Exception as e:  # TODO: fix generic exception
-                logging.error("failed on data_collect() @ " + e)
+                logging.error(e)
             phrase = "Making Music"
         rpcActive = False
     checkForUpdate()
