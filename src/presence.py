@@ -1,4 +1,4 @@
-from pypresence import Presence
+from pypresence import Presence, exceptions
 import time
 import json
 import requests
@@ -53,18 +53,22 @@ def checkForUpdate():
         forCheck = searchstring.split("[")[0]
         forCheck = forCheck.split("*")[0]
         forCheck = forCheck.strip()
-    if forCheck == "" and rpcActive:
-        RPC.clear()  # kills the RPC when there is no Ableton found to be running and it is stated as currently active
-        rpcActive = False  # inform everything else that the RPC is closed
-        storedTitle = ""
-    details = "Project: {}".format(forCheck)
-    if rpcActive and forCheck != storedTitle:
-        storedTitle = forCheck
-        RPC.update(large_image="main", state=phrase, details=details, start=time.time())
-    elif forCheck != "" and not rpcActive:
-        RPC.update(large_image="main", state=phrase, details=details, start=time.time())
-        storedTitle = forCheck
-        rpcActive = True
+    # RPC section
+    try: 
+        if forCheck == "" and rpcActive:
+            RPC.clear()  # kills the RPC when there is no Ableton found to be running and it is stated as currently active
+            rpcActive = False  # inform everything else that the RPC is closed
+            storedTitle = ""
+        details = "Project: {}".format(forCheck)
+        if rpcActive and forCheck != storedTitle:
+            storedTitle = forCheck
+            RPC.update(large_image="main", state=phrase, details=details, start=time.time())
+        elif forCheck != "" and not rpcActive:
+            RPC.update(large_image="main", state=phrase, details=details, start=time.time())
+            storedTitle = forCheck
+            rpcActive = True
+    except Exception as e:
+        print(e)
     outputDebug()
 
 
@@ -153,7 +157,7 @@ while True:
         RPC = Presence("609115046051840050")  # discord application ID
         try:
             RPC.connect()
-        except Exception as e:  # TODO: fix generic exception
+        except exceptions.InvalidPipe:  # TODO: fix generic exception
             onLaunch = True
             logging.warning("RPC handshake failed... trying again in 15 seconds")
         else:
@@ -166,5 +170,6 @@ while True:
                 logging.error(e)
             phrase = "Making Music"
         rpcActive = False
-    checkForUpdate()
+    else:
+        checkForUpdate()
     time.sleep(15)  # blocking statement is ok in this case
