@@ -42,7 +42,6 @@ def checkForUpdate():
     global titles
     EnumWindows(EnumWindowsProc(foreach_window), 0)
     aa = [string for string in titles if "Ableton Live" in string]  # checks to see if any process with the window name
-    # ableton live exists
     searchstring = ''.join(aa)
     titles = []
     checkForUntitled = [string for string in aa if "Untitled" in string]  # special case for untitled project
@@ -157,7 +156,7 @@ while True:
         RPC = Presence("609115046051840050")  # discord application ID
         try:
             RPC.connect()
-        except exceptions.InvalidPipe:  # TODO: fix generic exception
+        except exceptions.InvalidPipe:
             onLaunch = True
             logging.warning("RPC handshake failed... trying again in 15 seconds")
         else:
